@@ -66,7 +66,9 @@ const emacsPlugin = ViewPlugin.fromClass(class implements PluginValue {
 }, {
   eventHandlers: {
     keydown: function (e: KeyboardEvent, view: EditorView) {
+      console.log("Emacs keydown handler, key is " + e.key)
       var result = this.em.handleKeyboard(e)
+      console.log("handleKeyboard result is " + result)
       return !!result;
     },
     mousedown: function() {
@@ -192,6 +194,7 @@ class EmacsHandler {
   handleKeyboard(e: KeyboardEvent) {
     var keyData = EmacsHandler.getKey(e)
     var result = this.findCommand(keyData)
+    console.log(`handleKeyboard, keyData is ${keyData}. result is ${JSON.stringify(result)}`)
     if (result && result.command) {
       var commandResult = EmacsHandler.execCommand(result.command, this, result.args, result.count)
       if (commandResult === false)
