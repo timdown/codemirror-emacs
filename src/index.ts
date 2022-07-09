@@ -68,7 +68,7 @@ const emacsPlugin = ViewPlugin.fromClass(class implements PluginValue {
     keydown: function (e: KeyboardEvent, view: EditorView) {
       console.log("Emacs keydown handler, key is " + e.key)
       var result = this.em.handleKeyboard(e)
-      console.log("handleKeyboard result is " + result)
+      console.log("handleKeyboard result is ", !!result, result)
       return !!result;
     },
     mousedown: function() {
