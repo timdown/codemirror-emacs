@@ -2,7 +2,7 @@ import { BlockCursorPlugin, hideNativeSelection } from "./block-cursor"
 import { StateField, StateEffect, ChangeDesc, EditorSelection, Extension, MapMode } from "@codemirror/state"
 import { showPanel, EditorView, ViewPlugin, PluginValue, ViewUpdate } from "@codemirror/view"
 import * as commands from "@codemirror/commands"
-import { startCompletion } from "@codemirror/autocomplete"
+import { startCompletion, completionStatus } from "@codemirror/autocomplete"
 import { openSearchPanel } from "@codemirror/search"
 
 const emacsStyle = EditorView.theme({
@@ -193,6 +193,9 @@ class EmacsHandler {
     var keyData = EmacsHandler.getKey(e)
     var result = this.findCommand(keyData)
     if (result && result.command) {
+      if (result.filter && !result.filter(this.view)) {
+        return false
+      }
       var commandResult = EmacsHandler.execCommand(result.command, this, result.args, result.count)
       if (commandResult === false)
         return;
@@ -268,8 +271,10 @@ class EmacsHandler {
     // TODO extract special handling of markmode
     // TODO special case command.command is really unnecessary, remove
     var args;
+    var filter;
     if (typeof command !== "string") {
       args = command.args;
+      filter = command.filter;
       if (command.command) command = command.command;
     }
 
@@ -289,7 +294,7 @@ class EmacsHandler {
     var count = data.count || 1
     if (data.count) data.count = 0;
 
-    return { command, args, count };
+    return { command, args, filter, count };
   }
 
   showCommandLine(text: string) {
@@ -387,10 +392,14 @@ class EmacsHandler {
   }
 }
 
+function autocompleteMenuNotVisible(view: EditorView) {
+  return completionStatus(view.state) !== 'active'
+}
+
 export const emacsKeys: Record<string, any> = {
   // movement
-  "Up|C-p": { command: "goOrSelect", args: [commands.cursorLineUp, commands.selectLineUp] },
-  "Down|C-n": { command: "goOrSelect", args: [commands.cursorLineDown, commands.selectLineDown] },
+  "Up|C-p": { command: "goOrSelect", args: [commands.cursorLineUp, commands.selectLineUp], filter: autocompleteMenuNotVisible },
+  "Down|C-n": { command: "goOrSelect", args: [commands.cursorLineDown, commands.selectLineDown], filter: autocompleteMenuNotVisible },
   "Left|C-b": { command: "goOrSelect", args: [commands.cursorCharBackward, commands.selectCharBackward] },
   "Right|C-f": { command: "goOrSelect", args: [commands.cursorCharForward, commands.selectCharForward] },
   "C-Left|M-b": { command: "goOrSelect", args: [commands.cursorGroupLeft, commands.selectGroupLeft] },
